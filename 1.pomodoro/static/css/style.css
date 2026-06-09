@@ -13,7 +13,7 @@ body {
 .window {
   background: #fff;
   border-radius: 16px;
-  width: 340px;
+  width: 360px;
   box-shadow: 0 12px 40px rgba(0,0,0,.25);
   overflow: hidden;
 }
@@ -31,13 +31,13 @@ body {
 .win-btns { display: flex; gap: 10px; font-size: 12px; color: #bbb; cursor: default; }
 
 /* ---- コンテンツ ---- */
-.content { padding: 24px 32px 28px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.content { padding: 24px 28px 28px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
 
 /* フェーズラベル */
 .phase-label { font-size: 14px; color: #888; letter-spacing: .05em; }
 
 /* サイクルカウンター */
-.cycle-counter { font-size: 12px; color: #aaa; margin-top: -12px; letter-spacing: .04em; }
+.cycle-counter { font-size: 12px; color: #aaa; margin-top: -8px; letter-spacing: .04em; }
 
 /* ---- リング ---- */
 .ring-wrapper {
@@ -106,6 +106,8 @@ body {
   border-color: #ccc;
 }
 
+.btn-full { width: 100%; text-align: center; font-size: 13px; padding: 9px 16px; }
+
 /* ---- 進捗カード ---- */
 .progress-card {
   width: 100%;
@@ -125,3 +127,130 @@ body {
 .progress-value.accent { color: #6c63d5; }
 
 .progress-label { font-size: 11px; color: #999; }
+
+/* ---- XP カード ---- */
+.xp-card {
+  width: 100%;
+  background: #f5f5f7;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.xp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.level-badge {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: #6c63d5;
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.xp-text {
+  font-size: 11px;
+  color: #888;
+}
+
+.streak-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #bbb;
+  transition: color .2s;
+}
+
+.streak-badge.active { color: #e8762e; }
+
+.xp-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: #e0e0e6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.xp-bar-fg {
+  height: 100%;
+  background: linear-gradient(90deg, #6c63d5, #9c8ff2);
+  border-radius: 999px;
+  transition: width .4s ease;
+}
+
+/* ---- バッジカード ---- */
+.badges-card {
+  width: 100%;
+  background: #f5f5f7;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.badges-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 52px;
+  cursor: default;
+  opacity: .35;
+  transition: opacity .2s, transform .2s;
+}
+
+.badge-item.earned {
+  opacity: 1;
+}
+
+.badge-item.earned:hover { transform: scale(1.1); }
+
+.badge-emoji { font-size: 24px; line-height: 1; }
+
+.badge-name { font-size: 9px; color: #666; text-align: center; line-height: 1.2; }
+
+/* ---- 統計セクション ---- */
+.stats-section {
+  width: 100%;
+  background: #f5f5f7;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.stats-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.stats-tab {
+  flex: 1;
+  padding: 5px 0;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px solid #ddd;
+  border-radius: 999px;
+  background: #fff;
+  color: #888;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+
+.stats-tab.active {
+  background: #6c63d5;
+  color: #fff;
+  border-color: #6c63d5;
+}
+
+.chart-container {
+  width: 100%;
+  min-height: 80px;
+}
