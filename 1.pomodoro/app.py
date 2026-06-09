@@ -24,9 +24,14 @@ def create_app(config: dict | None = None) -> Flask:
     @app.route("/api/progress/add", methods=["POST"])
     def add_progress():
         body = request.get_json(silent=True) or {}
-        minutes = int(body.get("minutes", 25))
+        minutes_raw = body.get("minutes", 25)
+        try:
+            minutes = int(minutes_raw)
+        except (TypeError, ValueError):
+            return jsonify({"error": "minutes must be an integer"}), 400
+        if minutes <= 0:
+            return jsonify({"error": "minutes must be a positive integer"}), 400
         data = add_session(app.config["DATA_FILE"], minutes)
-        return jsonify(data)
 
     return app
 
