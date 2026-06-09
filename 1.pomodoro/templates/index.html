@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ポモドーロタイマー</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <div class="window">
+    <div class="title-bar">
+      <span class="title-text">ポモドーロタイマー</span>
+      <div class="win-btns">
+        <span>－</span><span>□</span><span>×</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <p class="phase-label" id="phaseLabel">作業中</p>
+      <p class="cycle-counter" id="cycleCounter">1 / 4</p>
+
+      <div class="ring-wrapper">
+        <svg class="ring-svg" viewBox="0 0 160 160">
+          <circle class="ring-bg" cx="80" cy="80" r="68" />
+          <circle class="ring-fg" id="ringFg" cx="80" cy="80" r="68" />
+        </svg>
+        <span class="time-display" id="timeDisplay">25:00</span>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="startBtn" onclick="toggleTimer()">開始</button>
+        <button class="btn btn-outline" onclick="resetTimer()">リセット</button>
+      </div>
+
+      <div class="progress-card">
+        <p class="progress-title">今日の進捗</p>
+        <div class="progress-row">
+          <div class="progress-item">
+            <span class="progress-value" id="sessionCount">0</span>
+            <span class="progress-label">完了</span>
+          </div>
+          <div class="progress-item">
+            <span class="progress-value accent" id="focusTime">0分</span>
+            <span class="progress-label">集中時間</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/timer.js') }}"></script>
+</body>
+</html>
