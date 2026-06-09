@@ -33,7 +33,6 @@ def create_app(config: dict | None = None) -> Flask:
             return jsonify({"error": "minutes must be a positive integer"}), 400
         data = add_session(app.config["DATA_FILE"], minutes)
         return jsonify(data)
-
     @app.route("/api/gamification", methods=["GET"])
     def gamification():
         data = get_gamification(app.config["DATA_FILE"])
