@@ -1,9 +1,40 @@
 (() => {
+  // ---- デフォルト設定 ----
+  const DEFAULTS = {
+    workMinutes:        25,
+    shortBreakMinutes:  5,
+    theme:              'light',
+    soundStart:         true,
+    soundEnd:           true,
+    soundTick:          false,
+  };
+
+  // ---- 設定の読み込み / 保存 ----
+  function loadSettings() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('pomodoroSettings') || '{}');
+      return Object.assign({}, DEFAULTS, saved);
+    } catch (_) {
+      return Object.assign({}, DEFAULTS);
+    }
+  }
+
+  function saveSettings(s) {
+    try { localStorage.setItem('pomodoroSettings', JSON.stringify(s)); } catch (_) {}
+  }
+
+  let settings = loadSettings();
+
   // ---- 定数 ----
-  const PHASES = {
-    work:       { label: '作業中',   minutes: 25, color: '#6c63d5' },
-    shortBreak: { label: '短い休憩', minutes: 5,  color: '#4caf7d' },
-    longBreak:  { label: '長い休憩', minutes: 15, color: '#4caf7d' },
+  const PHASE_COLORS = {
+    work:       '#6c63d5',
+    shortBreak: '#4caf7d',
+    longBreak:  '#4caf7d',
+  };
+  const PHASE_LABELS = {
+    work:       '作業中',
+    shortBreak: '短い休憩',
+    longBreak:  '長い休憩',
   };
   const SESSIONS_PER_CYCLE = 4;
   const CIRCUMFERENCE = 2 * Math.PI * 68; // r=68
@@ -16,126 +47,75 @@
   ];
 
   // ---- DOM ----
-  const ringFg          = document.getElementById('ringFg');
-  const timeDisplay     = document.getElementById('timeDisplay');
-  const startBtn        = document.getElementById('startBtn');
-  const phaseLabel      = document.getElementById('phaseLabel');
-  const cycleCounter    = document.getElementById('cycleCounter');
-  const sessionCount    = document.getElementById('sessionCount');
-  const focusTime       = document.getElementById('focusTime');
-  const particleCanvas  = document.getElementById('particleCanvas');
+  const ringFg        = document.getElementById('ringFg');
+  const timeDisplay   = document.getElementById('timeDisplay');
+  const startBtn      = document.getElementById('startBtn');
+  const phaseLabel    = document.getElementById('phaseLabel');
+  const cycleCounter  = document.getElementById('cycleCounter');
+  const sessionCount  = document.getElementById('sessionCount');
+  const focusTime     = document.getElementById('focusTime');
+  const settingsToggle = document.getElementById('settingsToggle');
+  const settingsPanel  = document.getElementById('settingsPanel');
 
   ringFg.style.strokeDasharray = CIRCUMFERENCE;
 
   // ---- 状態 ----
   let currentPhase  = 'work';
-  let cyclePosition = 0;      // 現サイクルで完了した作業セッション数（0〜3）
-  let totalSeconds  = PHASES.work.minutes * 60;
+  let cyclePosition = 0;
+  let totalSeconds  = settings.workMinutes * 60;
   let remaining     = totalSeconds;
   let intervalId    = null;
   let running       = false;
 
-  // ---- カラー補間 ----
-  function lerpColor(ratio) {
-    // WORK_COLORSは ratio 降順（1.0 → 0.0）
-    for (let i = 0; i < WORK_COLORS.length - 1; i++) {
-      const hi = WORK_COLORS[i];
-      const lo = WORK_COLORS[i + 1];
-      if (ratio >= lo.ratio) {
-        const t = (ratio - lo.ratio) / (hi.ratio - lo.ratio);
-        const r = Math.round(lo.r + t * (hi.r - lo.r));
-        const g = Math.round(lo.g + t * (hi.g - lo.g));
-        const b = Math.round(lo.b + t * (hi.b - lo.b));
-        return `rgb(${r},${g},${b})`;
+  // ---- サウンド ----
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  let audioCtx = null;
+
+  function getAudioCtx() {
+    if (!AudioCtx) return null;
+    if (!audioCtx || audioCtx.state === 'closed') audioCtx = new AudioCtx();
+    return audioCtx;
+  }
+
+  function playSound(type) {
+    if (type === 'start'  && !settings.soundStart) return;
+    if (type === 'end'    && !settings.soundEnd)   return;
+    if (type === 'tick'   && !settings.soundTick)  return;
+    try {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      if (type === 'start') {
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.25);
+      } else if (type === 'end') {
+        osc.frequency.value = 523;
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.6);
+      } else if (type === 'tick') {
+        osc.type = 'square';
+        osc.frequency.value = 1000;
+        gain.gain.setValueAtTime(0.04, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.05);
       }
-    }
-    const c = WORK_COLORS[WORK_COLORS.length - 1];
-    return `rgb(${c.r},${c.g},${c.b})`;
+    } catch (_) {}
   }
 
-  // パーティクル設定定数
-  const MAX_PARTICLES          = 60;
-  const PARTICLE_SIZE_MIN      = 1;
-  const PARTICLE_SIZE_MAX      = 3;   // size = MIN + random * MAX
-  const PARTICLE_ALPHA_MIN     = 0.1;
-  const PARTICLE_ALPHA_MAX     = 0.4; // alpha = MIN + random * MAX
-  const PARTICLE_H_SPEED       = 0.4; // 水平速度の最大振れ幅
-  const PARTICLE_V_SPEED_MIN   = 0.2; // 上方向の最小速度
-  const PARTICLE_V_SPEED_RANGE = 0.5; // 上方向の速度幅
-  const PARTICLE_LIFE_MIN      = 100;
-  const PARTICLE_LIFE_RANGE    = 200; // life = MIN + random * RANGE
-
-  // ---- パーティクルシステム ----
-  const ctx = particleCanvas ? particleCanvas.getContext('2d') : null;
-  let particles = [];
-  let particleAnimId = null;
-
-  function resizeCanvas() {
-    if (!particleCanvas) return;
-    particleCanvas.width  = window.innerWidth;
-    particleCanvas.height = window.innerHeight;
-  }
-
-  function createParticle() {
-    return {
-      x:     Math.random() * particleCanvas.width,
-      y:     Math.random() * particleCanvas.height,
-      r:     Math.random() * PARTICLE_SIZE_MAX + PARTICLE_SIZE_MIN,
-      alpha: Math.random() * PARTICLE_ALPHA_MAX + PARTICLE_ALPHA_MIN,
-      vx:    (Math.random() - 0.5) * PARTICLE_H_SPEED,
-      vy:    -(Math.random() * PARTICLE_V_SPEED_RANGE + PARTICLE_V_SPEED_MIN),
-      life:  Math.random() * PARTICLE_LIFE_RANGE + PARTICLE_LIFE_MIN,
-      age:   0,
-    };
-  }
-
-  function drawParticles() {
-    if (!ctx) return;
-    ctx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
-
-    // 新パーティクル補充
-    while (particles.length < MAX_PARTICLES) {
-      particles.push(createParticle());
-    }
-
-    particles = particles.filter(p => p.age < p.life);
-
-    for (const p of particles) {
-      const fade = 1 - p.age / p.life;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${p.alpha * fade})`;
-      ctx.fill();
-      p.x   += p.vx;
-      p.y   += p.vy;
-      p.age += 1;
-    }
-
-    particleAnimId = requestAnimationFrame(drawParticles);
-  }
-
-  function startParticles() {
-    if (particleAnimId || !particleCanvas) return;
-    resizeCanvas();
-    particles = [];
-    particleCanvas.classList.add('active');
-    drawParticles();
-  }
-
-  function stopParticles() {
-    if (particleAnimId) {
-      cancelAnimationFrame(particleAnimId);
-      particleAnimId = null;
-    }
-    if (particleCanvas) {
-      particleCanvas.classList.remove('active');
-      if (ctx) ctx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
-    }
-    particles = [];
-  }
-
-  if (particleCanvas) {
-    window.addEventListener('resize', resizeCanvas);
+  // ---- テーマ ----
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme === 'light' ? '' : theme);
+    const opts = document.querySelectorAll('#themeOptions .opt-btn');
+    opts.forEach(b => b.classList.toggle('active', b.dataset.value === theme));
   }
 
   // ---- 進捗 API ----
@@ -159,7 +139,7 @@
       const res  = await fetch('/api/progress/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ minutes: PHASES.work.minutes }),
+        body: JSON.stringify({ minutes: settings.workMinutes }),
       });
       const data = await res.json();
       updateProgressUI(data);
@@ -188,18 +168,32 @@
     if (currentPhase === 'work') {
       cycleCounter.textContent = `${cyclePosition + 1} / ${SESSIONS_PER_CYCLE}`;
     } else {
-      cycleCounter.textContent = PHASES[currentPhase].label;
+      cycleCounter.textContent = PHASE_LABELS[currentPhase];
     }
   }
 
   // ---- フェーズ切り替え ----
+  function phaseMinutes(phase) {
+    if (phase === 'work') return settings.workMinutes;
+    if (phase === 'shortBreak') return settings.shortBreakMinutes;
+    return 15; // longBreak は固定
+  }
+
+  function phaseColor(phase) {
+    if (document.documentElement.getAttribute('data-theme') === 'focus') {
+      return phase === 'work' ? '#b0a8f0' : '#7ed6a8';
+    }
+    return PHASE_COLORS[phase];
+  }
+
   function switchToPhase(phase) {
     currentPhase = phase;
-    totalSeconds = PHASES[phase].minutes * 60;
+    totalSeconds = phaseMinutes(phase) * 60;
     remaining    = totalSeconds;
     running      = false;
     clearInterval(intervalId);
-    phaseLabel.textContent = PHASES[phase].label;
+    ringFg.style.stroke    = phaseColor(phase);
+    phaseLabel.textContent = PHASE_LABELS[phase];
     startBtn.textContent   = '開始';
     renderCycleCounter();
     render();
@@ -230,7 +224,7 @@
     if (remaining <= 0) {
       clearInterval(intervalId);
       running = false;
-      stopParticles();
+      playSound('end');
       if (currentPhase === 'work') {
         notifyComplete().then(() => advancePhase());
       } else {
@@ -239,6 +233,7 @@
       return;
     }
     remaining--;
+    playSound('tick');
     render();
   }
 
@@ -248,12 +243,12 @@
       clearInterval(intervalId);
       running = false;
       startBtn.textContent   = '再開';
-      phaseLabel.textContent = PHASES[currentPhase].label + '（一時停止）';
-      if (currentPhase === 'work') stopParticles();
+      phaseLabel.textContent = PHASE_LABELS[currentPhase] + '（一時停止）';
     } else {
       running = true;
       startBtn.textContent   = '一時停止';
-      phaseLabel.textContent = PHASES[currentPhase].label;
+      phaseLabel.textContent = PHASE_LABELS[currentPhase];
+      playSound('start');
       intervalId = setInterval(tick, 1000);
       if (currentPhase === 'work') startParticles();
     }
@@ -269,8 +264,76 @@
     switchToPhase('work');
   };
 
+  // ---- 設定パネル ----
+  settingsToggle.addEventListener('click', () => {
+    settingsPanel.classList.toggle('open');
+  });
+
+  // ---- 作業時間変更 ----
+  window.setWorkMinutes = function (minutes) {
+    settings.workMinutes = minutes;
+    saveSettings(settings);
+    const opts = document.querySelectorAll('#workTimeOptions .opt-btn');
+    opts.forEach(b => b.classList.toggle('active', Number(b.dataset.value) === minutes));
+    if (currentPhase === 'work') switchToPhase('work');
+  };
+
+  // ---- 休憩時間変更 ----
+  window.setBreakMinutes = function (minutes) {
+    settings.shortBreakMinutes = minutes;
+    saveSettings(settings);
+    const opts = document.querySelectorAll('#breakTimeOptions .opt-btn');
+    opts.forEach(b => b.classList.toggle('active', Number(b.dataset.value) === minutes));
+    if (currentPhase === 'shortBreak') switchToPhase('shortBreak');
+  };
+
+  // ---- テーマ変更 ----
+  window.setTheme = function (theme) {
+    settings.theme = theme;
+    saveSettings(settings);
+    applyTheme(theme);
+    // リングの色をテーマに合わせて更新
+    ringFg.style.stroke = phaseColor(currentPhase);
+  };
+
+  // ---- サウンドトグル ----
+  const SOUND_MAP = {
+    start: { key: 'soundStart', btnId: 'soundStartBtn' },
+    end:   { key: 'soundEnd',   btnId: 'soundEndBtn'   },
+    tick:  { key: 'soundTick',  btnId: 'soundTickBtn'  },
+  };
+
+  window.toggleSound = function (type) {
+    const { key, btnId } = SOUND_MAP[type] || {};
+    if (!key) return;
+    settings[key] = !settings[key];
+    saveSettings(settings);
+    document.getElementById(btnId).classList.toggle('active', settings[key]);
+  };
+
+  // ---- 設定UIの初期反映 ----
+  function initSettingsUI() {
+    // 作業時間
+    document.querySelectorAll('#workTimeOptions .opt-btn').forEach(b => {
+      b.classList.toggle('active', Number(b.dataset.value) === settings.workMinutes);
+    });
+    // 休憩時間
+    document.querySelectorAll('#breakTimeOptions .opt-btn').forEach(b => {
+      b.classList.toggle('active', Number(b.dataset.value) === settings.shortBreakMinutes);
+    });
+    // テーマ
+    applyTheme(settings.theme);
+    // サウンドボタン
+    document.getElementById('soundStartBtn').classList.toggle('active', settings.soundStart);
+    document.getElementById('soundEndBtn').classList.toggle('active', settings.soundEnd);
+    document.getElementById('soundTickBtn').classList.toggle('active', settings.soundTick);
+  }
+
   // ---- 初期化 ----
-  ringFg.style.stroke = lerpColor(1.0);
+  initSettingsUI();
+  totalSeconds = settings.workMinutes * 60;
+  remaining    = totalSeconds;
+  ringFg.style.stroke = phaseColor('work');
   renderCycleCounter();
   render();
   loadProgress();

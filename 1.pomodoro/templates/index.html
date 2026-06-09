@@ -12,6 +12,7 @@
     <div class="title-bar">
       <span class="title-text">ポモドーロタイマー</span>
       <div class="win-btns">
+        <button class="settings-toggle" id="settingsToggle" title="設定">⚙</button>
         <span>－</span><span>□</span><span>×</span>
       </div>
     </div>
@@ -73,6 +74,43 @@
           <button class="stats-tab"        id="tabMonthly" onclick="showStats(30)">月間（30日）</button>
         </div>
         <div id="chartContainer" class="chart-container"></div>
+      </div>
+    </div>
+
+    <!-- 設定パネル -->
+    <div class="settings-panel" id="settingsPanel">
+      <div class="settings-row">
+        <span class="settings-label">作業時間</span>
+        <div class="settings-options" id="workTimeOptions">
+          <button class="opt-btn" data-value="15" onclick="setWorkMinutes(15)">15分</button>
+          <button class="opt-btn active" data-value="25" onclick="setWorkMinutes(25)">25分</button>
+          <button class="opt-btn" data-value="35" onclick="setWorkMinutes(35)">35分</button>
+          <button class="opt-btn" data-value="45" onclick="setWorkMinutes(45)">45分</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">休憩時間</span>
+        <div class="settings-options" id="breakTimeOptions">
+          <button class="opt-btn active" data-value="5" onclick="setBreakMinutes(5)">5分</button>
+          <button class="opt-btn" data-value="10" onclick="setBreakMinutes(10)">10分</button>
+          <button class="opt-btn" data-value="15" onclick="setBreakMinutes(15)">15分</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">テーマ</span>
+        <div class="settings-options" id="themeOptions">
+          <button class="opt-btn active" data-value="light" onclick="setTheme('light')">ライト</button>
+          <button class="opt-btn" data-value="dark" onclick="setTheme('dark')">ダーク</button>
+          <button class="opt-btn" data-value="focus" onclick="setTheme('focus')">フォーカス</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">サウンド</span>
+        <div class="settings-options">
+          <button class="opt-btn active" id="soundStartBtn" onclick="toggleSound('start')">開始音</button>
+          <button class="opt-btn active" id="soundEndBtn" onclick="toggleSound('end')">終了音</button>
+          <button class="opt-btn" id="soundTickBtn" onclick="toggleSound('tick')">tick音</button>
+        </div>
       </div>
     </div>
   </div>
