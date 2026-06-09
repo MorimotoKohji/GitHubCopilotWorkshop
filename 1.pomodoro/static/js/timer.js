@@ -163,6 +163,9 @@
       });
       const data = await res.json();
       updateProgressUI(data);
+      if (typeof window.refreshGamification === 'function') {
+        window.refreshGamification();
+      }
     } catch (_) {}
   }
 
