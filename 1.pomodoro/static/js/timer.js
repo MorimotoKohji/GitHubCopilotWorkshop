@@ -39,6 +39,13 @@
   const SESSIONS_PER_CYCLE = 4;
   const CIRCUMFERENCE = 2 * Math.PI * 68; // r=68
 
+  // 作業フェーズ用カラーキーフレーム（blue → yellow → red）
+  const WORK_COLORS = [
+    { ratio: 1.0, r: 108, g:  99, b: 213 }, // blue  (#6c63d5)
+    { ratio: 0.5, r: 240, g: 170, b:  30 }, // yellow (#f0aa1e)
+    { ratio: 0.0, r: 220, g:  53, b:  69 }, // red   (#dc3545)
+  ];
+
   // ---- DOM ----
   const ringFg        = document.getElementById('ringFg');
   const timeDisplay   = document.getElementById('timeDisplay');
@@ -136,6 +143,9 @@
       });
       const data = await res.json();
       updateProgressUI(data);
+      if (typeof window.refreshGamification === 'function') {
+        window.refreshGamification();
+      }
     } catch (_) {}
   }
 
@@ -145,6 +155,12 @@
     const sec = String(remaining % 60).padStart(2, '0');
     timeDisplay.textContent = `${min}:${sec}`;
     ringFg.style.strokeDashoffset = CIRCUMFERENCE * (1 - (remaining / totalSeconds));
+
+    // 作業フェーズ中は残り時間の割合に応じてリングの色を変化
+    if (currentPhase === 'work') {
+      const ratio = remaining / totalSeconds;
+      ringFg.style.stroke = lerpColor(ratio);
+    }
   }
 
   function renderCycleCounter() {
@@ -181,6 +197,12 @@
     startBtn.textContent   = '開始';
     renderCycleCounter();
     render();
+
+    // 休憩フェーズはフェーズ固有の色を使用し、パーティクルを停止
+    if (phase !== 'work') {
+      ringFg.style.stroke = PHASES[phase].color;
+      stopParticles();
+    }
   }
 
   function advancePhase() {
@@ -228,12 +250,14 @@
       phaseLabel.textContent = PHASE_LABELS[currentPhase];
       playSound('start');
       intervalId = setInterval(tick, 1000);
+      if (currentPhase === 'work') startParticles();
     }
   };
 
   // ---- リセット ----
   window.resetTimer = function () {
     clearInterval(intervalId);
+    stopParticles();
     currentPhase  = 'work';
     cyclePosition = 0;
     running       = false;
@@ -314,4 +338,3 @@
   render();
   loadProgress();
 })();
-

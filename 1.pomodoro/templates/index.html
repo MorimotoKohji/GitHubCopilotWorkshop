@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
 <body>
+  <canvas id="particleCanvas"></canvas>
   <div class="window">
     <div class="title-bar">
       <span class="title-text">ポモドーロタイマー</span>
@@ -45,6 +46,34 @@
             <span class="progress-label">集中時間</span>
           </div>
         </div>
+      </div>
+
+      <!-- XP / レベル / ストリーク -->
+      <div class="xp-card">
+        <div class="xp-header">
+          <span class="level-badge" id="levelBadge">Lv.1</span>
+          <span class="xp-text" id="xpText">0 / 100 XP</span>
+          <span class="streak-badge" id="streakBadge">🔥 0日</span>
+        </div>
+        <div class="xp-bar-bg">
+          <div class="xp-bar-fg" id="xpBarFg" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- バッジ -->
+      <div class="badges-card">
+        <p class="progress-title">バッジ</p>
+        <div class="badges-grid" id="badgesGrid"></div>
+      </div>
+
+      <!-- 統計トグル -->
+      <button class="btn btn-outline btn-full" id="statsToggleBtn" onclick="toggleStats()">📊 週間 / 月間統計</button>
+      <div class="stats-section" id="statsSection" style="display:none">
+        <div class="stats-tabs">
+          <button class="stats-tab active" id="tabWeekly"  onclick="showStats(7)">週間（7日）</button>
+          <button class="stats-tab"        id="tabMonthly" onclick="showStats(30)">月間（30日）</button>
+        </div>
+        <div id="chartContainer" class="chart-container"></div>
       </div>
     </div>
 
@@ -87,5 +116,6 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/timer.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
 </body>
 </html>

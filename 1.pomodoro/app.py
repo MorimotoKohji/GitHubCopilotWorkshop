@@ -1,6 +1,6 @@
 import os
 from flask import Flask, jsonify, render_template, request
-from progress import load_progress, add_session
+from progress import load_progress, add_session, get_gamification, get_stats
 
 
 def create_app(config: dict | None = None) -> Flask:
