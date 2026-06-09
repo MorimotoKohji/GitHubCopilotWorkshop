@@ -61,14 +61,22 @@
   let running       = false;
 
   // ---- サウンド ----
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  let audioCtx = null;
+
+  function getAudioCtx() {
+    if (!AudioCtx) return null;
+    if (!audioCtx || audioCtx.state === 'closed') audioCtx = new AudioCtx();
+    return audioCtx;
+  }
+
   function playSound(type) {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
     if (type === 'start'  && !settings.soundStart) return;
     if (type === 'end'    && !settings.soundEnd)   return;
     if (type === 'tick'   && !settings.soundTick)  return;
     try {
-      const ctx  = new AudioCtx();
+      const ctx = getAudioCtx();
+      if (!ctx) return;
       const osc  = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
@@ -265,9 +273,15 @@
   };
 
   // ---- サウンドトグル ----
+  const SOUND_MAP = {
+    start: { key: 'soundStart', btnId: 'soundStartBtn' },
+    end:   { key: 'soundEnd',   btnId: 'soundEndBtn'   },
+    tick:  { key: 'soundTick',  btnId: 'soundTickBtn'  },
+  };
+
   window.toggleSound = function (type) {
-    const key = type === 'start' ? 'soundStart' : type === 'end' ? 'soundEnd' : 'soundTick';
-    const btnId = type === 'start' ? 'soundStartBtn' : type === 'end' ? 'soundEndBtn' : 'soundTickBtn';
+    const { key, btnId } = SOUND_MAP[type] || {};
+    if (!key) return;
     settings[key] = !settings[key];
     saveSettings(settings);
     document.getElementById(btnId).classList.toggle('active', settings[key]);

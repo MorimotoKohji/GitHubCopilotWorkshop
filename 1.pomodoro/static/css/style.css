@@ -42,6 +42,8 @@
   --title-btn:        #555;
   --opt-btn-bg:       #2a2a4e;
   --opt-btn-text:     #bbb;
+  --opt-btn-active-bg:  #6c63d5;
+  --opt-btn-active-text:#fff;
 }
 
 /* ---- フォーカステーマ ---- */
@@ -264,8 +266,8 @@ body {
 }
 
 .opt-btn.active {
-  background: var(--opt-btn-active-bg, #6c63d5);
-  color: var(--opt-btn-active-text, #fff);
+  background: var(--opt-btn-active-bg);
+  color: var(--opt-btn-active-text);
 }
 
 .opt-btn:hover:not(.active) { opacity: .75; }
