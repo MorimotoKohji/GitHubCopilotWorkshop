@@ -32,6 +32,7 @@ def create_app(config: dict | None = None) -> Flask:
         if minutes <= 0:
             return jsonify({"error": "minutes must be a positive integer"}), 400
         data = add_session(app.config["DATA_FILE"], minutes)
+        return jsonify(data)
 
     return app
 
