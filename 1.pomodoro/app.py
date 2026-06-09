@@ -32,4 +32,5 @@ def create_app(config: dict | None = None) -> Flask:
 
 
 if __name__ == "__main__":
-    create_app().run(debug=True)
+    debug = os.getenv("FLASK_DEBUG", "").lower() in ("1", "true", "yes", "on")
+    create_app().run(debug=debug)
