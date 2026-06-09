@@ -10,9 +10,12 @@ def _today_str():
 def load_progress(data_file: str, today: str | None = None) -> dict:
     today = today or _today_str()
     if os.path.exists(data_file):
-        with open(data_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        if data.get("date") == today:
+        try:
+            with open(data_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except (OSError, json.JSONDecodeError, ValueError):
+            data = None
+        if isinstance(data, dict) and data.get("date") == today:
             return data
     return {"date": today, "completed_sessions": 0, "total_focus_minutes": 0}
 
