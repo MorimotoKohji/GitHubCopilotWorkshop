@@ -60,7 +60,7 @@
     const min = String(Math.floor(remaining / 60)).padStart(2, '0');
     const sec = String(remaining % 60).padStart(2, '0');
     timeDisplay.textContent = `${min}:${sec}`;
-    ringFg.style.strokeDashoffset = CIRCUMFERENCE * (remaining / totalSeconds);
+    ringFg.style.strokeDashoffset = CIRCUMFERENCE * (1 - (remaining / totalSeconds));
   }
 
   function renderCycleCounter() {
