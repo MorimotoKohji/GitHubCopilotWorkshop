@@ -1,21 +1,91 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ---- テーマ変数 ---- */
+:root {
+  --bg-page:          #7c6fd6;
+  --bg-window:        #fff;
+  --bg-card:          #f5f5f7;
+  --bg-settings:      #fafafa;
+  --text-primary:     #222;
+  --text-secondary:   #888;
+  --text-muted:       #aaa;
+  --accent:           #6c63d5;
+  --accent-break:     #4caf7d;
+  --border:           #f0f0f0;
+  --ring-bg:          #ececec;
+  --btn-outline-bg:   #fff;
+  --btn-outline-text: #444;
+  --btn-outline-bdr:  #ccc;
+  --title-text:       #333;
+  --title-btn:        #bbb;
+  --opt-btn-bg:       #ececec;
+  --opt-btn-text:     #444;
+  --opt-btn-active-bg:  #6c63d5;
+  --opt-btn-active-text:#fff;
+}
+
+/* ---- ダークテーマ ---- */
+[data-theme="dark"] {
+  --bg-page:          #1a1a2e;
+  --bg-window:        #16213e;
+  --bg-card:          #0f3460;
+  --bg-settings:      #1e2a45;
+  --text-primary:     #e0e0e0;
+  --text-secondary:   #9a9a9a;
+  --text-muted:       #666;
+  --border:           #2a2a4e;
+  --ring-bg:          #2a2a4e;
+  --btn-outline-bg:   #16213e;
+  --btn-outline-text: #ccc;
+  --btn-outline-bdr:  #444;
+  --title-text:       #ccc;
+  --title-btn:        #555;
+  --opt-btn-bg:       #2a2a4e;
+  --opt-btn-text:     #bbb;
+}
+
+/* ---- フォーカステーマ ---- */
+[data-theme="focus"] {
+  --bg-page:          #121212;
+  --bg-window:        #1e1e1e;
+  --bg-card:          #2a2a2a;
+  --bg-settings:      #252525;
+  --text-primary:     #f0f0f0;
+  --text-secondary:   #777;
+  --text-muted:       #555;
+  --accent:           #b0a8f0;
+  --accent-break:     #7ed6a8;
+  --border:           #333;
+  --ring-bg:          #333;
+  --btn-outline-bg:   #1e1e1e;
+  --btn-outline-text: #ccc;
+  --btn-outline-bdr:  #444;
+  --title-text:       #bbb;
+  --title-btn:        #444;
+  --opt-btn-bg:       #333;
+  --opt-btn-text:     #bbb;
+  --opt-btn-active-bg:  #b0a8f0;
+  --opt-btn-active-text:#111;
+}
+
 body {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: #7c6fd6;
+  background: var(--bg-page);
   font-family: "Hiragino Sans", "Meiryo", sans-serif;
+  transition: background .3s;
 }
 
 /* ---- ウィンドウ枠 ---- */
 .window {
-  background: #fff;
+  background: var(--bg-window);
   border-radius: 16px;
   width: 340px;
   box-shadow: 0 12px 40px rgba(0,0,0,.25);
   overflow: hidden;
+  transition: background .3s;
 }
 
 .title-bar {
@@ -23,21 +93,34 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 10px 16px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border);
+  transition: border-color .3s;
 }
 
-.title-text { font-size: 13px; font-weight: 600; color: #333; }
+.title-text { font-size: 13px; font-weight: 600; color: var(--title-text); }
 
-.win-btns { display: flex; gap: 10px; font-size: 12px; color: #bbb; cursor: default; }
+.win-btns { display: flex; gap: 10px; font-size: 12px; color: var(--title-btn); cursor: default; }
+
+.settings-toggle {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0 4px;
+  line-height: 1;
+  transition: color .15s;
+}
+.settings-toggle:hover { color: var(--accent); }
 
 /* ---- コンテンツ ---- */
 .content { padding: 24px 32px 28px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
 
 /* フェーズラベル */
-.phase-label { font-size: 14px; color: #888; letter-spacing: .05em; }
+.phase-label { font-size: 14px; color: var(--text-secondary); letter-spacing: .05em; }
 
 /* サイクルカウンター */
-.cycle-counter { font-size: 12px; color: #aaa; margin-top: -12px; letter-spacing: .04em; }
+.cycle-counter { font-size: 12px; color: var(--text-muted); margin-top: -12px; letter-spacing: .04em; }
 
 /* ---- リング ---- */
 .ring-wrapper {
@@ -58,13 +141,13 @@ body {
 
 .ring-bg {
   fill: none;
-  stroke: #ececec;
+  stroke: var(--ring-bg);
   stroke-width: 14;
 }
 
 .ring-fg {
   fill: none;
-  stroke: #6c63d5;       /* 作業中：紫（JSで動的に変更） */
+  stroke: var(--accent);      /* 作業中：アクセント色（JSで動的に変更） */
   stroke-width: 14;
   stroke-linecap: round;
   transition: stroke-dashoffset .5s linear, stroke .3s ease;
@@ -73,10 +156,11 @@ body {
 .time-display {
   font-size: 42px;
   font-weight: 700;
-  color: #222;
+  color: var(--text-primary);
   letter-spacing: .02em;
   position: relative;
   z-index: 1;
+  transition: color .3s;
 }
 
 /* ---- ボタン ---- */
@@ -95,33 +179,93 @@ body {
 .btn:hover { opacity: .85; }
 
 .btn-primary {
-  background: #6c63d5;
+  background: var(--accent);
   color: #fff;
-  border-color: #6c63d5;
+  border-color: var(--accent);
+  transition: background .3s, border-color .3s;
 }
 
 .btn-outline {
-  background: #fff;
-  color: #444;
-  border-color: #ccc;
+  background: var(--btn-outline-bg);
+  color: var(--btn-outline-text);
+  border-color: var(--btn-outline-bdr);
+  transition: background .3s, color .3s, border-color .3s;
 }
 
 /* ---- 進捗カード ---- */
 .progress-card {
   width: 100%;
-  background: #f5f5f7;
+  background: var(--bg-card);
   border-radius: 12px;
   padding: 14px 20px;
+  transition: background .3s;
 }
 
-.progress-title { font-size: 12px; color: #888; margin-bottom: 10px; }
+.progress-title { font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; }
 
 .progress-row { display: flex; justify-content: space-around; }
 
 .progress-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 
-.progress-value { font-size: 26px; font-weight: 700; color: #222; }
+.progress-value { font-size: 26px; font-weight: 700; color: var(--text-primary); transition: color .3s; }
 
-.progress-value.accent { color: #6c63d5; }
+.progress-value.accent { color: var(--accent); }
 
-.progress-label { font-size: 11px; color: #999; }
+.progress-label { font-size: 11px; color: var(--text-muted); }
+
+/* ---- 設定パネル ---- */
+.settings-panel {
+  border-top: 1px solid var(--border);
+  background: var(--bg-settings);
+  padding: 0 20px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .3s ease, padding .3s ease, background .3s;
+}
+
+.settings-panel.open {
+  max-height: 300px;
+  padding: 16px 20px 20px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.settings-row:last-child { margin-bottom: 0; }
+
+.settings-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  min-width: 56px;
+}
+
+.settings-options {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.opt-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: var(--opt-btn-bg);
+  color: var(--opt-btn-text);
+  transition: background .15s, color .15s;
+}
+
+.opt-btn.active {
+  background: var(--opt-btn-active-bg, #6c63d5);
+  color: var(--opt-btn-active-text, #fff);
+}
+
+.opt-btn:hover:not(.active) { opacity: .75; }
