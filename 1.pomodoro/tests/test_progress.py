@@ -64,5 +64,5 @@ def test_add_session_resets_on_new_day(tmp_path):
 
 def test_add_session_custom_minutes(tmp_path):
     f = str(tmp_path / "progress.json")
-    result = add_session(f, minutes=5, today="2026-06-09")  # 短い休憩
+    result = add_session(f, minutes=5, today="2026-06-09")  # カスタム分数
     assert result["total_focus_minutes"] == 5
